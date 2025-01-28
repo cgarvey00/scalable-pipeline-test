@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/cgarvey00/scalable-app.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean install'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+
+        stage('Docker Run') {
+            steps {
+                sh '''
+                if [ $(docker ps -q --filter "name=scalable-app") ]; then
+                    docker stop scalable-app && docker rm scalable-app
+                filter
+                '''
+                sh 'docker run -d --name scalable-app -p 3000:3000 scalable-app:latest'
+            }
+        }
+    }
+
+    post {
+        always {
+
+            cleanWs()
+        }
+    }
+}
