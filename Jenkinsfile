@@ -14,6 +14,13 @@ pipeline {
             }
         }
 
+        stage('Debug Java'){
+            steps{
+                sh 'java -version'
+                sh 'mvn -version'
+            }
+        }
+
         stage('Build') {
             steps {
                 sh 'export JAVA_HOME=/opt/jdk-21.0.2+13 && mvn clean install --debug'
