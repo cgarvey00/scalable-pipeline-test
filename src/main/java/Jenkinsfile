@@ -20,21 +20,27 @@ pipeline {
             }
         }
 
-        stage('Docker Run') {
+        stage('Docker Build & Push') {
             steps {
-                sh '''
-                if [ $(docker ps -q --filter "name=scalable-app") ]; then
-                    docker stop scalable-app && docker rm scalable-app
-                filter
-                '''
-                sh 'docker run -d --name scalable-app -p 3000:3000 scalable-app:latest'
+            script {
+                docker.build('cgarvey2k25/scalable-app:latest')
+                docker.withRegistry('https://index.docker.io/v1/','docker-hub-credentials'){
+                sh 'docker push cgarvey2k25/scalable-app:latest'
+               }
             }
         }
     }
+         stage('Deploy'){
+            steps{
+                sh 'docker run -d --name scalable-app -p 3000:3000 cgarvey2k25/scalable-app:latest'
+            }
+         }
+      }
+
 
     post {
         always {
-
+            // Ensures the workspace is clear
             cleanWs()
         }
     }
