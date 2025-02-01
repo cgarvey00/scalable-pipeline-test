@@ -35,28 +35,27 @@ pipeline {
 
         stage('Docker Build & Push') {
             steps {
-            script {
-                docker.build("${IMAGE_NAME}")
-                docker.withRegistry('https://index.docker.io/v1/','docker-hub-credentials'){
-                sh 'docker push ${IMAGE_NAME}'
-               }
+                sh '''
+                docker build -t "${IMAGE_NAME}" .
+                echo "DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
+                docker push ${IMAGE_NAME}
+                '''
             }
         }
-    }
-         stage('Deploy'){
-            steps{
-              script{
-              sh '''
-              if [ "$(docker ps -q -f name=scalable-pipeline-test)"]; then
-                  docker stop scalable-pipeline-test && docker rm scalable-pipeline-test
-              fi
-              '''
 
-              sh "docker run -d --name scalable-pipeline-test -p 3000:3000 ${IMAGE_NAME}"
-              }
-            }
-         }
-      }
+            stage('Deploy') {
+                     steps {
+                         script {
+                             sh '''
+                             if [ "$(docker ps -q -f name=scalable-pipeline-test)" ]; then
+                                 docker stop scalable-pipeline-test && docker rm scalable-pipeline-test
+                             fi
+                             '''
+                             sh "docker run -d --name scalable-pipeline-test -p 3000:3000 ${IMAGE_NAME}"
+                         }
+                     }
+                 }
+             }
 
 
     post {
