@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment{
+        IMAGE_NAME='cgarvey2k25/scalable-pipeline-test:latest'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -23,16 +27,24 @@ pipeline {
         stage('Docker Build & Push') {
             steps {
             script {
-                docker.build('cgarvey2k25/scalable-pipeline-test:latest')
+                docker.build("${IMAGE_NAME}")
                 docker.withRegistry('https://index.docker.io/v1/','docker-hub-credentials'){
-                sh 'docker push cgarvey2k25/scalable-pipeline-test:latest'
+                sh 'docker push ${IMAGE_NAME}'
                }
             }
         }
     }
          stage('Deploy'){
             steps{
-                sh 'docker run -d --name scalable-pipeline-test -p 3000:3000 cgarvey2k25/scalable-pipeline-test:latest'
+              script{
+              sh '''
+              if [ "$(docker ps -q -f name=scalable-pipeline-test)"]; then
+                  docker stop scalable-pipeline-test && docker rm scalable-pipeline-test
+              fi
+              '''
+
+              sh "docker run -d --name scalable-pipeline-test -p 3000:3000 ${IMAGE_NAME}"
+              }
             }
          }
       }
