@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/cgarvey00/scalable-app.git'
+                git branch: 'main', url: 'https://github.com/cgarvey00/scalable-pipeline-test.git'
             }
         }
 
@@ -23,16 +23,16 @@ pipeline {
         stage('Docker Build & Push') {
             steps {
             script {
-                docker.build('cgarvey2k25/scalable-app:latest')
+                docker.build('cgarvey2k25/scalable-pipeline-test:latest')
                 docker.withRegistry('https://index.docker.io/v1/','docker-hub-credentials'){
-                sh 'docker push cgarvey2k25/scalable-app:latest'
+                sh 'docker push cgarvey2k25/scalable-pipeline-test:latest'
                }
             }
         }
     }
          stage('Deploy'){
             steps{
-                sh 'docker run -d --name scalable-app -p 3000:3000 cgarvey2k25/scalable-app:latest'
+                sh 'docker run -d --name scalable-pipeline-test -p 3000:3000 cgarvey2k25/scalable-pipeline-test:latest'
             }
          }
       }
