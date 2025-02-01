@@ -16,13 +16,13 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean install'
+                sh 'export JAVA_HOME=/opt/jdk-21.0.2+13 && mvn clean install --debug'
             }
         }
 
         stage('Test') {
             steps {
-                sh 'mvn test'
+                sh 'export JAVA_HOME=/opt/jdk-21.0.2+13 && mvn test'
             }
         }
 
