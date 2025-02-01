@@ -2,6 +2,8 @@ pipeline {
     agent any
 
     environment{
+        JAVA_HOME='/opt/jdk-21.0.2+13'
+        PATH="${JAVA_HOME}/bin:${PATH}"
         IMAGE_NAME='cgarvey2k25/scalable-pipeline-test:latest'
     }
 
