@@ -1,7 +1,7 @@
 pipeline {
     agent any
 
-    environment{
+    environment {
         JAVA_HOME='/opt/jdk-21.0.2+13'
         PATH="${JAVA_HOME}/bin:${PATH}"
         IMAGE_NAME='cgarvey2k25/scalable-pipeline-test:latest'
@@ -14,8 +14,8 @@ pipeline {
             }
         }
 
-        stage('Debug Java'){
-            steps{
+        stage('Debug Java') {
+            steps {
                 sh 'java -version'
                 sh 'mvn -version'
             }
@@ -35,33 +35,37 @@ pipeline {
 
         stage('Docker Build & Push') {
             steps {
-                sh '''
-                docker build -t "${IMAGE_NAME}" .
-                echo "DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
-                docker push ${IMAGE_NAME}
-                '''
+                withCredentials([
+                    usernamePassword(credentialsId: 'docker-hub-credentials',
+                    usernameVariable: 'DOCKER_HUB_USERNAME',
+                    passwordVariable: 'DOCKER_HUB_PASSWORD')
+                ]) {
+                    sh '''
+                    docker build -t "${IMAGE_NAME}" .
+                    echo $DOCKER_HUB_PASSWORD | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
+                    docker push ${IMAGE_NAME}
+                    '''
+                }
             }
         }
 
-            stage('Deploy') {
-                     steps {
-                         script {
-                             sh '''
-                             if [ "$(docker ps -q -f name=scalable-pipeline-test)" ]; then
-                                 docker stop scalable-pipeline-test && docker rm scalable-pipeline-test
-                             fi
-                             '''
-                             sh "docker run -d --name scalable-pipeline-test -p 3000:3000 ${IMAGE_NAME}"
-                         }
-                     }
-                 }
-             }
-
+        stage('Deploy') {
+            steps {
+                script {
+                    sh '''
+                    if [ "$(docker ps -q -f name=scalable-pipeline-test)" ]; then
+                        docker stop scalable-pipeline-test && docker rm scalable-pipeline-test
+                    fi
+                    '''
+                    sh "docker run -d --name scalable-pipeline-test -p 3000:3000 ${IMAGE_NAME}"
+                }
+            }
+        }
+    }
 
     post {
         always {
-            // Ensures the workspace is clear
-            cleanWs()
+            cleanWs() // Ensures the workspace is clear
         }
     }
 }
